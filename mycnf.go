@@ -1,4 +1,4 @@
-// Package mycnf provides access to MySQL configuration files (in .ini format)
+// Package mycnf provides access to MySQL configuration files (in .ini format).
 // Based on code from https://gist.github.com/nickcarenza/d847ec24455e70a8609b6602ed528133
 package mycnf
 
@@ -36,8 +36,9 @@ func NewMyCnf() *Mycnf {
 	}
 }
 
-// ReadMyCnf reads .my.cnf section "profile", fills in missing values in the passed structure,
-// and returns a DSN suitable for use in db.Open()
+// ReadMyCnf reads a .my.cnf section "profile", fills in missing values in the passed structure,
+// and returns a DSN suitable for use in db.Open(). ReadMyCnf returns an error only if there
+// was an actual error attempting to access the file. Not finding the "profile" is not an error.
 func (c *Mycnf) ReadMyCnf(configFile *string, profile string) (string, error) {
 	dbhost := "localhost" // default MySQL host
 	dbport := "3306"      // default MySQL port
