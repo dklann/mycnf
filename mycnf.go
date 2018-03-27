@@ -38,7 +38,8 @@ func NewMyCnf() *Mycnf {
 
 // ReadMyCnf reads a .my.cnf section "profile", fills in missing values in the passed structure,
 // and returns a DSN suitable for use in db.Open(). ReadMyCnf returns an error only if there
-// was an actual error attempting to access the file. Not finding the "profile" is not an error.
+// was an actual error attempting to access the file. Not finding the file or the "profile"
+// within the file is not an error.
 func (c *Mycnf) ReadMyCnf(configFile *string, profile string) (string, error) {
 	dbhost := "localhost" // default MySQL host
 	dbport := "3306"      // default MySQL port
@@ -51,51 +52,50 @@ func (c *Mycnf) ReadMyCnf(configFile *string, profile string) (string, error) {
 	}
 
 	// Load the contents of the config file at configFile.
-	cfg, err := ini.LoadSources(ini.LoadOptions{AllowBooleanKeys: true, Insensitive: true}, *configFile)
-	if err != nil {
-		return "", err
-	}
+	cfg, _ := ini.LoadSources(ini.LoadOptions{AllowBooleanKeys: true, Insensitive: true}, *configFile)
 
 	// Examine .my.cnf (or other configuration file) for named profile and key-values.
-	for _, s := range cfg.Sections() {
-		if s.Name() == profile {
-			// Prefer setting "host" in this order: passed as arg, from .my.cnf, default (localhost)
-			if c.DbHost != "" {
-				dbhost = c.DbHost
-			} else if s.Key("host").Value() != "" {
-				dbhost = s.Key("host").Value()
+	if cfg != nil {
+		for _, s := range cfg.Sections() {
+			if s.Name() == profile {
+				// Prefer setting "host" in this order: passed as arg, from .my.cnf, default (localhost)
+				if c.DbHost != "" {
+					dbhost = c.DbHost
+				} else if s.Key("host").Value() != "" {
+					dbhost = s.Key("host").Value()
+				}
+				// Prefer setting "port" in the same manner as "host".
+				if c.DbPort != "" {
+					dbport = c.DbPort
+				} else if s.Key("port").Value() != "" {
+					dbport = s.Key("port").Value()
+				}
+				// Nonexistent database name is an error.
+				if c.DbName != "" {
+					dbname = c.DbName
+				} else if s.Key("dbname").Value() != "" {
+					dbname = s.Key("dbname").Value()
+				} else {
+					return "", errors.New("missing database name, cannot continue")
+				}
+				// Nonexistent user name is an error.
+				if c.DbUser != "" {
+					dbuser = c.DbUser
+				} else if s.Key("user").Value() != "" {
+					dbuser = s.Key("user").Value()
+				} else {
+					return "", errors.New("missing database user name, cannot continue")
+				}
+				// Nonexistent password is an error.
+				if c.DbPass != "" {
+					dbpass = c.DbPass
+				} else if s.Key("password").Value() != "" {
+					dbpass = s.Key("password").Value()
+				} else {
+					return "", errors.New("missing database password, cannot continue")
+				}
+				return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbuser, dbpass, dbhost, dbport, dbname), nil
 			}
-			// Prefer setting "port" in the same manner as "host".
-			if c.DbPort != "" {
-				dbport = c.DbPort
-			} else if s.Key("port").Value() != "" {
-				dbport = s.Key("port").Value()
-			}
-			// Nonexistent database name is an error.
-			if c.DbName != "" {
-				dbname = c.DbName
-			} else if s.Key("dbname").Value() != "" {
-				dbname = s.Key("dbname").Value()
-			} else {
-				return "", errors.New("missing database name, cannot continue")
-			}
-			// Nonexistent user name is an error.
-			if c.DbUser != "" {
-				dbuser = c.DbUser
-			} else if s.Key("user").Value() != "" {
-				dbuser = s.Key("user").Value()
-			} else {
-				return "", errors.New("missing database user name, cannot continue")
-			}
-			// Nonexistent password is an error.
-			if c.DbPass != "" {
-				dbpass = c.DbPass
-			} else if s.Key("password").Value() != "" {
-				dbpass = s.Key("password").Value()
-			} else {
-				return "", errors.New("missing database password, cannot continue")
-			}
-			return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbuser, dbpass, dbhost, dbport, dbname), nil
 		}
 	}
 
