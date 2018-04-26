@@ -17,9 +17,11 @@ import (
 func ReadMyCnf(configFile *string, profile string) (map[string]string, error) {
 	dbhost := "localhost" // default MySQL host
 	dbport := "3306"      // default MySQL port
-	dbname := ""
-	dbuser := ""
-	dbpass := ""
+	var (
+		dbname string
+		dbuser string
+		dbpass string
+	)
 
 	if profile == "" {
 		return nil, errors.New("missing 'profile' name for .my.cnf")
