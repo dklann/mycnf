@@ -1,12 +1,11 @@
-// Package mycnf provides access to MySQL configuration files (in .ini format).
+// mycnf provides access to MySQL configuration files (in .ini format).
 // Based on code from https://gist.github.com/nickcarenza/d847ec24455e70a8609b6602ed528133
 package mycnf
 
 import (
 	"errors"
-)
+	"fmt"
 
-import (
 	"github.com/go-ini/ini"
 )
 
@@ -24,12 +23,20 @@ func ReadMyCnf(configFile *string, profile string) (map[string]string, error) {
 	)
 
 	if profile == "" {
-		return nil, errors.New("missing 'profile' name for .my.cnf")
+		return nil, fmt.Errorf("missing 'profile' name for %s", *configFile)
 	}
 
 	// Load the contents of the config file at configFile
 	// as well as the two "system" configuration files.
-	cfg, _ := ini.LoadSources(ini.LoadOptions{AllowBooleanKeys: true, Insensitive: true, Loose: true}, "/etc/mysql/my.cnf", "/etc/my.cnf", *configFile)
+	cfg, _ := ini.LoadSources(
+		ini.LoadOptions{
+			AllowBooleanKeys: true,
+			Insensitive:      true,
+			Loose:            true,
+		},
+		"/etc/mysql/my.cnf",
+		"/etc/my.cnf",
+		*configFile)
 
 	// Examine .my.cnf (or other configuration file) for named profile and key-values.
 	if cfg != nil {
@@ -41,15 +48,21 @@ func ReadMyCnf(configFile *string, profile string) (map[string]string, error) {
 				if s.Key("port").Value() != "" {
 					dbport = s.Key("port").Value()
 				}
-				dbname = s.Key("dbname").Value()
-				dbuser = s.Key("user").Value()
-				dbpass = s.Key("password").Value()
+				if s.Key("database").Value() != "" {
+					dbname = s.Key("database").Value()
+				}
+				if s.Key("user").Value() != "" {
+					dbuser = s.Key("user").Value()
+				}
+				if s.Key("password").Value() != "" {
+					dbpass = s.Key("password").Value()
+				}
 				confMap := map[string]string{
-					"dbhost": dbhost,
-					"dbport": dbport,
-					"dbname": dbname,
-					"dbuser": dbuser,
-					"dbpass": dbpass,
+					"host":     dbhost,
+					"port":     dbport,
+					"database": dbname,
+					"user":     dbuser,
+					"password": dbpass,
 				}
 				return confMap, nil
 			}

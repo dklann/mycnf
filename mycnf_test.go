@@ -7,8 +7,7 @@ import (
 )
 
 func TestReadMyCnf(t *testing.T) {
-	var configurationFile string
-	configurationFile = os.Getenv("HOME") + "/.my.cnf"
+	configurationFile := os.Getenv("HOME") + "/.my.cnf"
 	var myConfigFile = &configurationFile
 	type want map[string]string
 
@@ -19,7 +18,7 @@ func TestReadMyCnf(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    map[string]string
+		want    want
 		wantErr bool
 	}{
 		{
@@ -29,11 +28,11 @@ func TestReadMyCnf(t *testing.T) {
 				"client",
 			},
 			want{
-				"dbhost": "service",
-				"dbpass": "YHYgXEE",
-				"dbname": "",
-				"dbuser": "",
-				"dbport": "3306",
+				"host":     "service",
+				"password": "YHYgXEE",
+				"database": "",
+				"user":     "",
+				"port":     "3306",
 			},
 			false,
 		},
@@ -44,11 +43,11 @@ func TestReadMyCnf(t *testing.T) {
 				"mysql",
 			},
 			want{
-				"dbhost": "localhost",
-				"dbpass": "6fd49tieoaniPNDkwAlNJEaPkwib",
-				"dbname": "",
-				"dbuser": "root",
-				"dbport": "3306",
+				"host":     "localhost",
+				"password": "6fd49tieoaniPNDkwAlNJEaPkwib",
+				"database": "",
+				"user":     "root",
+				"port":     "3306",
 			},
 			false,
 		},
@@ -59,9 +58,10 @@ func TestReadMyCnf(t *testing.T) {
 				"client",
 			},
 			want{
-				"dbhost": "localhost",
-				"dbuser": "dklann",
-				"dbpass": "1q2w3e4r",
+				"host":     "localhost",
+				"user":     "ice",
+				"password": "letmein",
+				"database": "listens",
 			},
 			false,
 		},
