@@ -1,10 +1,7 @@
 module github.com/dklann/mycnf
 
-go 1.17
+go 1.22
 
-require github.com/go-ini/ini v1.48.0
+require github.com/go-ini/ini v1.67.0
 
-require (
-	github.com/smartystreets/goconvey v0.0.0-20190731233626-505e41936337 // indirect
-	gopkg.in/ini.v1 v1.48.0 // indirect
-)
+require github.com/stretchr/testify v1.8.4 // indirect
